@@ -1,0 +1,21 @@
+circle {
+  fill: #ddd;
+  stroke: #999;
+}
+
+text {
+  fill: black;
+  stroke: black;
+}
+
+button {
+  margin-bottom: 1em;
+}
+
+svg {
+  background-color: #eee;
+}
+
+line {
+  stroke: black;
+}
