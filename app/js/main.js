@@ -1,4 +1,4 @@
-var d3 = require('d3');
+var d3 = require('./d3');
 var _ = require('lodash');
 
 var r = 20,
@@ -20,45 +20,41 @@ svg.append('defs').append('marker')
     .attr("d", 'M0,-5 L10,0 L0,5')
     .attr('fill', 'black');
 
-
-var force = d3.layout.force()
-    .charge(-120)
-    .linkDistance(70)
-    .size([width, height]);
-
 function render() {
   d3.json('model.json', function(error, data) {
     var nodeById = _.keyBy(data.nodes, 'id');
 
     // run autolayout
-    force
-        .nodes(data.nodes)
-        .links(_.map(data.links, function(link) {
-            return {source: nodeById[link.from],
-                    target: nodeById[link.to]}}))
-        .start();
+    var simulation = d3.forceSimulation(data.nodes)
+      .force('center', d3.forceCenter(width / 2, height / 2))
+      .force("charge", d3.forceManyBody().distanceMin(r * 2))
+      .force("link", d3.forceLink(data.links).id(d => d.id).distance(70))
+      .force("collide",d3.forceCollide())
+      .on("tick", tick);
 
     // render nodes
     var nodes = svg.selectAll('.node').data(data.nodes, function(d) {return d.id});
+    nodes.exit().remove();
     var nodesEnter = nodes.enter().append('g')
         .attr('class', 'node')
         .attr('transform', 'translate(50, 50)');
     nodesEnter.append('circle')
         .attr('r', r);
     nodesEnter.append('text');
-    nodes.select('text').text(function(d) {return d.label});
-    nodes.select('text').each(function(d) {
+    var enterUpdate = nodesEnter.merge(nodes);
+    enterUpdate.select('text').text(function(d) {return d.label});
+    enterUpdate.select('text').each(function(d) {
       var bbox = this.getBBox();
       d3.select(this).attr({x: -bbox.x - bbox.width / 2, y: -bbox.y - bbox.height / 2});
     });
-    nodes.exit().remove();
 
     // render links
-    var links = svg.selectAll('.link').data(data.links, function(d) {return String(d.from) + '_' + String(d.to)});
+    var links = svg.selectAll('.link').data(data.links, function(d) {return String(d.source) + '_' + String(d.target)});
+    links.exit().remove();
     var linksEnter = links.enter().append('line')
     .attr('class', 'link')
     .attr('marker-end', 'url(#markerArrowEnd)');
-    links.exit().remove();
+    var linksEnterUpdate = linksEnter.merge(links);
 
     // returns {from: {x, y}, to: {x, y}} that goes between
     // edge of circles with the supplied center points
@@ -72,19 +68,20 @@ function render() {
     }
 
     // autolayout animation
-    force.on("tick", function() {
-      nodes.each(function(d) {
+    function tick() {
+      enterUpdate.each(function(d) {
         d3.select(this).attr('transform', 'translate(' + d.x + ', ' + d.y + ')');
       });
-      links.each(function(d) {
-        var adjustedEnds = adjustEnds(nodeById[d.from], nodeById[d.to], r);
+      linksEnterUpdate.each(function(d) {
+        console.log(d);
+        var adjustedEnds = adjustEnds(d.source, d.target, r);
         d3.select(this)
         .attr("x1", function(d) { return adjustedEnds.from.x; })
         .attr("y1", function(d) { return adjustedEnds.from.y; })
         .attr("x2", function(d) { return adjustedEnds.to.x; })
         .attr("y2", function(d) { return adjustedEnds.to.y; });
       });
-    });
+    }
   });
 }
 

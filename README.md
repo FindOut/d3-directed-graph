@@ -1,5 +1,6 @@
-# d3-dircted-graph
-nodes and links layout algorithm
+# d3-directed-graph
+
+Simple nodes and links diagram.
 
 ## Prerequisites
 
