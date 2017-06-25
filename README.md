@@ -4,7 +4,7 @@ Simple nodes and links diagram.
 
 ## Prerequisites
 
-- install node.js
+- install node.js - see https://nodejs.org
 
 ## installation
 
