@@ -16,3 +16,5 @@ npm start
 ```
 
 Now a web browser should open and after a while show a diagram.
+
+![example screen](directed-graph-example.png)
